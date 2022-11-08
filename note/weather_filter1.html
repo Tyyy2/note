@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./weather.css">
+</head>
+
+<body>
+    <nav>
+        <!-- onclick是步驟4，不要偷跑窩 -->
+        <div class="btn" onclick="filter('all')">全台</div>
+        <div class="btn" onclick="filter(north)">北部</div>
+        <div class="btn" onclick="filter(center)">中部</div>
+        <div class="btn" onclick="filter(south)">南部</div>
+        <div class="btn" onclick="filter(east)">東部</div>
+        <div class="btn" onclick="filter(island)">離島地區</div>
+
+    </nav>
+    <div class="weather-cards">
+        <!-- 先寫起來當樣本，然後JS改用innerHTML之後再隱藏起來 
+            <div class="card">
+            <img src="./catImg/cat1.jpg" alt="晴天">
+            <h2>台北市</h2>
+            <p>降雨機率：10%</p>
+            <p>溫度：22~30度</p>
+            <P>多雲到晴</P>
+        </div> -->
+    </div>
+
+    <script>
+
+
+
+        //1.先想想要怎麼做出一個卡片
+
+        const weatherCards = document.querySelector('.weather-cards')
+        //1-1確定可以用innerHTML，做出一樣的卡片
+        // weatherCards.innerHTML =`
+        // <div class="card">
+        //     <img src="./catImg/cat1.jpg" alt="晴天">
+        //     <h2>台北市</h2>
+        //     <p>降雨機率：10%</p>
+        //     <p>溫度：22~30度</p>
+        //     <P>多雲到晴</P>
+        // </div>
+        // `
+
+        //2確定印得出來之後，再將內容改成用變數抓
+        // 2-1首先，我們要先拿到需要的資料，所以先做個API
+
+        //API指令，將網址放到fetch的()
+        fetch('https://opendata.cwb.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWB-AA300EC1-31BA-465E-B669-6CA2C320A195')
+            //這段是將獲得的資料變成json的格式
+            .then(function (response) {
+                return response.json();
+            })
+            //function裡面的變數，可以改成自己比較好理解的名稱
+            .then(function (weather) {
+                //康搜出來，就可以看到資料內容是什麼，要去哪裡抓到自己需要的資料囉
+                console.log(weather);
+                //然後找到每個城市的資料，設個變數locations，讓各城市的資料區分出來
+                //這樣抓出來的location是陣列喔!因為裡面是各縣市的各種天氣資訊
+                var locations = weather.records.location
+
+                // // 2-2然後再將每個需要抓得數據設定變數
+                //     //寫完發現err，因為目前的location是陣列，想試試看對不對
+                //     //把上面loactions變數改成locations = weather.records.location[0]
+                //     //這樣第一筆資料就出來囉!記得確定完再改回原本的樣子!
+                // let location = locations.locationName
+                // let minTemp = locations.weatherElement[2].time[0].parameter.parameterName
+                // let maxTemp = locations.weatherElement[4].time[0].parameter.parameterName
+                // let rain = locations.weatherElement[1].time[0].parameter.parameterName
+                // let feel = locations.weatherElement[3].time[0].parameter.parameterName
+                // let imgPath
+                // if (rain < 25) {
+                //     imgPath = './catImg/cat1.jpg'
+                // } else if (rain <= 50) {
+                //     imgPath = './catImg/cat2.jpg'
+                // } else {
+                //     imgPath = './catImg/cat3.jpg'
+                // }
+                // weatherCards.innerHTML = `
+                // <div class="card">
+                //     <img src="${imgPath}" alt="天氣圖片">
+                //     <h2>${location}</h2>
+                //     <p>降雨機率：10%</p>
+                //     <p>溫度:${minTemp}℃ ~ ${maxTemp}℃</p>
+                //     <P>舒適度：${feel}</P>
+                // </div>
+                // `
+
+                // 2-3再把上面得改成for / forEach，讓它可以把所有城鎮的資訊都印出來
+                //element是變數，可以改成你需要的名字，表示locations這個陣列的每一筆資料
+                //所以原本locations的地方都要改成element喔!
+                locations.forEach(element => {
+                    let location = element.locationName
+                    let minTemp = element.weatherElement[2].time[0].parameter.parameterName
+                    let maxTemp = element.weatherElement[4].time[0].parameter.parameterName
+                    let rain = element.weatherElement[1].time[0].parameter.parameterName
+                    let feel = element.weatherElement[3].time[0].parameter.parameterName
+                    let imgPath
+                    if (rain < 25) {
+                        imgPath = './catImg/cat1.jpg'
+                    } else if (rain <= 50) {
+                        imgPath = './catImg/cat2.jpg'
+                    } else {
+                        imgPath = './catImg/cat3.jpg'
+                    }
+                    //記得!這裡的innerHTML的=要改成+=，不然卡片都只會有最後一張。
+                    //然後設定data-set是為了後面抓資料用的
+                    weatherCards.innerHTML += `
+                <div class="card" data-city=${location}>
+                    <img src="${imgPath}" alt="天氣圖片">
+                    <h2>${location}</h2>
+                    <p>降雨機率：${rain}</p>
+                    <p>溫度:${minTemp}℃ ~ ${maxTemp}℃</p>
+                    <P>舒適度：${feel}</P>
+                </div>
+                `
+                });
+
+            });
+        //因為我資料已經都在網頁上了，所以我不需要再fetch裡面了
+        //fetch已經是函式，所以我沒辦法在裡面定義新的function
+
+        //4.我要把我需要的縣市顯示出來就好，其他就消失ㄅ。
+        //4-1 設定onclick事件!(回HTML的按鈕寫onclick囉)
+        //為什麼不在JS寫onclick就好？因為必須重複寫5次啊！
+
+
+        const btn = document.querySelectorAll('.btn')
+        const north = ['臺北市', '新北市', '基隆市', '新竹市', '桃園市', '新竹縣', '宜蘭縣']
+        const center = ['苗栗縣', '臺中市', '彰化縣', '南投縣', '雲林縣']
+        const south = ['嘉義市', '嘉義縣', '臺南市', '高雄市', '屏東縣', '澎湖縣']
+        const east = ['花蓮縣', '臺東縣']
+        const island = ['金門縣', '連江縣']
+
+        //function 函式名稱(函式變數) -->需要靠變數來抓到地區陣列
+        function filter(areas) {
+            //先抓到每個城市的卡片
+            var allCity = document.querySelectorAll('.card')
+
+            //然後對每個城市檢查，如果onclick事件的變數(areas)是all，城市就顯示。如果是其他的話，就檢查他的data-attribute是不是我們要的地區!
+            allCity.forEach(city => {
+                if (areas == 'all') {
+                    city.style.display = 'block'
+                } else {
+                    //先假設所有城市都不顯示
+                    city.style.display = 'none'
+                    areas.forEach(area => {
+                        //將條件拿出來比較, 如果條件中的任何一個縣市有符合就加上block顯示出來
+                        if (city.dataset.city == area) {
+                            city.style.display = 'block'
+                        }
+                    })
+                }
+            });
+        }
+
+
+    </script>
+
+</body>
+
+</html>
